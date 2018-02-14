@@ -1,0 +1,522 @@
+<html>
+<head>
+<title>Project 0</title>
+<style type="text/css" href="project0.css"></style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+    <script src="https://d3js.org/d3.v4.js"></script>
+<!--Put your D3 import statement between these two lines-->
+</head>
+
+<body>
+	<div id="partOne">
+        <h1>Part One: </h1>
+	</div>
+
+    <div id="partTwo">
+        <h1>Part Two: </h1>
+        <div id="barchart">
+            <p id="barchartLabel">   </p>
+        </div>
+	</div>
+
+    <div id="partThree">
+        <h1>Part Three &amp; Four: </h1>
+        <div id="scatterplot">
+            <p id="scatterLabel"></p>
+        </div>
+	</div>
+
+    <div id="partFive">
+        <h1>Part Five: </h1>
+        <div id="scatterplotSet">
+        </div>
+	</div>
+
+    <script type="text/javascript">
+        // Put your part one code here ***********************
+        //Loading each data file and using console function to see the data values in the browser console
+        d3.csv("data/anscombe_I.csv",function(error,data){
+              if(error) throw error;
+              checkDataset(data);
+              console.log(data);
+        });
+        d3.csv("data/anscombe_II.csv",function(error,data){
+              if(error) throw error
+              checkDataset(data);
+
+                    });
+        d3.csv("data/anscombe_III.csv",function(error,data){
+              if(error) throw error;
+              checkDataset(data);
+         });
+         d3.csv("data/anscombe_IV.csv",function(error,data){
+               if(error) throw error;
+               checkDataset(data);
+
+          });
+        // Leave this to test your data uploading. All data uploading should be above this line
+        function checkDataset(dataset) {
+            if (dataset.length == 11)
+                $("#partOne").append("<p>data loaded correctly</p>");
+            else
+                $("#partOne").append("<p>data loaded incorrectly. Try using the debugger to help you find the bug!</p>");
+        }
+
+        // Put your part two code here ***********************
+          d3.csv("data/anscombe_III.csv",function(data){
+
+       //converting data using the parseFloat and  forEach function to convert each data value once
+
+              data.forEach(function(d){
+                d.x=parseFloat(d.x);
+                d.y=parseFloat(d.y);
+              });
+
+            // specifying the margins for around the visualizations
+
+          var margin={top:20, bottom:20,left:50,right:20};
+          //creating variable width and subtracting the margins from the set width of 700
+          var width = 600 - margin.left - margin.right;
+          //Similarly creating height of the visualization and subtracting it from top margins
+          var height= 400- margin.top - margin.bottom;
+
+          //Mapping the domain to range using the scaleLinear function
+          var xVal = d3.scaleLinear().range([0,width]);
+          var yVal = d3.scaleLinear().range([height,0]);
+
+          //Mapping dataset range on to the scale, the starting parameter 1,1 tells where the scale/axix is going to start in the visualization
+
+          xVal.domain([1,1 + d3.max(data,function(d)  {return d.x;})]);
+          yVal.domain([1,1 + d3.max(data,function(d) {return d.y})]);
+
+          //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+
+          var svg = d3.select("#barchart")
+                  .append("svg")
+                  .attr("height",height + margin.top + margin.bottom)
+                  .attr("width", width + margin.left + margin.right)
+                  .append("g")
+                  .attr("transform","translate(" + margin.left + "," + margin.top + ")" );
+
+
+
+          // Incorporating the scatterplot symbols in the svg place, apart from enter method, there is also exit method which I saw in an example (Link is in the text file)
+          // Also specify the width and height of the circle that we are going to draw from the cx and cy values
+          svg.selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("r",10)
+                .attr("fill","blue")
+                .attr("stroke","red")
+                .attr("stroke-width",3)
+                .attr("cx", function(d){return xVal(d.x);})
+                .attr("cy",function(d){return yVal(d.y);})
+
+    //mouseover event , this tells that when you are going to move your mouse over a data point then what is going to happen
+                .on("mouseover", function(c,f){
+                 d3.select(this)
+                 .transition()
+                 .duration(100)
+                 .attr("r", 15)
+                 .style("fill", "lightblue");})
+    //mouse out function defines the state of the event , when we are going to remove our mouse from a particular data point on scatterplot
+                 .on("mouseout", function(c,f){
+                 d3.select(this)
+                  .transition()
+                  .duration(100)
+                  .attr("r",10)
+                 .style("fill", "blue");})
+
+
+          //Plotting x and y axis
+              svg.append("g")
+                .attr("transform","translate(0,"+height+")")
+                .call(d3.axisBottom(xVal))
+                .attr("stroke-width",2);
+
+              svg.append("g")
+                .call(d3.axisLeft(yVal))
+                .attr("stroke-width",4);
+
+        });
+
+        // Put your part three & four code here ***********************
+        d3.csv("data/anscombe_III.csv",function(error,data){
+
+                if(error) throw error;
+                //Cleaning data by converting it using the forEach and parseFloat function
+
+                data.forEach(function(d){
+                  d.x = parseFloat(d.x);
+                  d.y = parseFloat(d.y);
+                });
+
+              //defining the margins for the line graph
+               var margin={top:20, bottom:30, left:50, right:20};
+               //setting up the dimensions for the width and height of the visualization
+               var width= 600 - margin.left - margin.right;
+               var height= 400- margin.top- margin.bottom;
+
+               //mappign domain to the range using the scaleLinear function
+
+               var x= d3.scaleLinear().range([0,width]);
+               var y= d3.scaleLinear().range([height,0]);
+
+   //defining the minimum and maxiumum value of the data set, whereas I also explored an function called extent(), which automatically finds the min and max in dataset
+              x.domain([d3.min(data, function(d) { return d.x;}), d3.max(data, function(d){return d.x;}) +1 ]);
+               y.domain([0,d3.max(data,function(d){return d.y;})+1]);
+
+               //sorting function used to help recognize the line to start from where
+               data.sort(function(a,b){
+                 return d3.ascending(a.x,b.x);
+               });
+
+               //declaring valueline to place the line() value into it and then using callback function,giving the x and y values. Whereas using curveLinear to add into the curve values.
+                  var valueline = d3.line()
+                      .x(function(d){return x(d.x);})
+                      .y(function(d){return y(d.y);})
+                      .curve(d3.curveLinear);
+           //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+                var svg = d3.select("#scatterplot")
+                                .append("svg")
+                                .attr("width", width + margin.left + margin.right)
+                                .attr("height", height + margin.top + margin.bottom)
+                                .append("g")
+                                .attr("transform", "translate(" + margin.left + "," + margin.top + ")" );
+
+
+                          //creating values in the line path
+
+                          svg.append("g")
+                             .append("path")
+                             .data([data])
+                             .attr("class", "line")
+                             .attr("d", valueline)
+                             .attr("fill", "none")
+                             .attr("stroke-width",3)
+                             .attr("stroke", "lightblue");
+
+                     //creating the scatterplot circles and getting up the properties of the scatterplot
+
+                     // Incorporating the scatterplot symbols in the svg place, apart from enter method, there is also exit method which I saw in an example (Link is in the text file)
+                     // Also specify the width and height of the circle that we are going to draw from the cx and cy values
+
+                     svg.selectAll("circle")
+                           .data(data)
+                           .enter()
+                           .append("circle")
+                           .attr("r",10)
+                           .attr("fill","blue")
+                           .attr("stroke","red")
+                           .attr("stroke-width",3)
+                           .attr("cx", function(d){return x(d.x);})
+                           .attr("cy",function(d){return y(d.y);})
+
+                      //Creating the y and x axis for the line graph
+                      svg.append("g")
+                        .attr("transform","translate(0,"+height+")")
+                        .call(d3.axisBottom(x))
+                        .attr("stroke-width",2);
+
+                      svg.append("g")
+                        .call(d3.axisLeft(y))
+                        .attr("stroke-width",4);
+                      });
+
+
+        // Put your part five code here ***********************
+        //displaying first data set in the same div.
+        //Data I
+
+        d3.csv("data/anscombe_I.csv",function(data){
+
+      //converting data using the parseFloat and  forEach function to convert each data value once
+
+            data.forEach(function(d){
+              d.x=parseFloat(d.x);
+              d.y=parseFloat(d.y);
+            });
+
+          // specifying the margins for around the visualizations
+
+        var margin={top:20, bottom:20,left:50,right:20};
+        //creating variable width and subtracting the margins from the set width of 700
+        var width = 300 - margin.left - margin.right;
+        //Similarly creating height of the visualization and subtracting it from top margins
+        var height= 300- margin.top - margin.bottom;
+
+        //Mapping the domain to range using the scaleLinear function
+        var xVal = d3.scaleLinear().range([0,width]);
+        var yVal = d3.scaleLinear().range([height,0]);
+
+        //Mapping dataset range on to the scale, the starting parameter 1,1 tells where the scale/axix is going to start in the visualization
+
+        xVal.domain([1,1 + d3.max(data,function(d)  {return d.x;})]);
+        yVal.domain([1,1 + d3.max(data,function(d) {return d.y})]);
+
+
+      //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+
+        var svg = d3.select("#scatterplotSet")
+                .append("svg")
+                .attr("height",height + margin.top + margin.bottom)
+                .attr("width", width + margin.left + margin.right)
+                .append("g")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")" );
+
+
+
+          // Incorporating the scatterplot symbols in the svg place, apart from enter method, there is also exit method which I saw in an example (Link is in the text file)
+          // Also specify the width and height of the circle that we are going to draw from the cx and cy values
+
+
+        svg.selectAll("circle")
+              .data(data)
+              .enter()
+              .append("circle")
+              .attr("r",10)
+              .attr("fill","blue")
+              .attr("stroke","red")
+              .attr("stroke-width",3)
+              .attr("cx", function(d){return xVal(d.x);})
+              .attr("cy",function(d){return yVal(d.y);})
+
+        //Plotting x and y axis
+            svg.append("g")
+              .attr("transform","translate(0,"+height+")")
+              .call(d3.axisBottom(xVal))
+              .attr("stroke-width",2);
+
+            svg.append("g")
+              .call(d3.axisLeft(yVal))
+              .attr("stroke-width",4);
+
+            //adding label to the diagrams by appending the text and then specifying the height and width of the labels and most importantly using .text for telling the text value
+              svg.append("text")
+                 .attr("x",(width /2))
+                 .attr("y",0 - (margin-top /2))
+                 .attr("text-anchor","middle")
+                 .style("font-size","20px")
+                 .text("Anscombe I Here");
+
+      });
+
+
+      d3.csv("data/anscombe_III.csv",function(data){
+
+   //converting data using the parseFloat and  forEach function to convert each data value once
+
+          data.forEach(function(d){
+            d.x=parseFloat(d.x);
+            d.y=parseFloat(d.y);
+          });
+
+        // specifying the margins for around the visualizations
+
+      var margin={top:20, bottom:20,left:50,right:20};
+      //creating variable width and subtracting the margins from the set width of 700
+      var width = 300 - margin.left - margin.right;
+      //Similarly creating height of the visualization and subtracting it from top margins
+      var height= 300- margin.top - margin.bottom;
+
+      //Mapping the domain to range using the scaleLinear function
+      var xVal = d3.scaleLinear().range([0,width]);
+      var yVal = d3.scaleLinear().range([height,0]);
+
+      //Mapping dataset range on to the scale
+
+      xVal.domain([1,1 + d3.max(data,function(d)  {return d.x;})]);
+      yVal.domain([1,1 + d3.max(data,function(d) {return d.y})]);
+
+      //creating SVG object space in the part two div
+
+      var svg = d3.select("#scatterplotSet")
+              .append("svg")
+              .attr("height",height + margin.top + margin.bottom)
+              .attr("width", width + margin.left + margin.right)
+              .append("g")
+              .attr("transform","translate(" + margin.left + "," + margin.top + ")" );
+
+
+
+      // Incorporating the scatterplot symbols in the svg place
+
+      svg.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("r",10)
+            .attr("fill","blue")
+            .attr("stroke","red")
+            .attr("stroke-width",3)
+            .attr("cx", function(d){return xVal(d.x);})
+            .attr("cy",function(d){return yVal(d.y);})
+
+      //Plotting x and y axis
+          svg.append("g")
+            .attr("transform","translate(0,"+height+")")
+            .call(d3.axisBottom(xVal))
+            .attr("stroke-width",2);
+
+          svg.append("g")
+            .call(d3.axisLeft(yVal))
+            .attr("stroke-width",4);
+
+            svg.append("text")
+               .attr("x",(width /2))
+               .attr("y",0 - (margin-top /2))
+               .attr("text-anchor","middle")
+               .style("font-size","20px")
+               .text("Anscombe III Here");
+
+    });
+
+    d3.csv("data/anscombe_II.csv",function(data){
+
+ //converting data using the parseFloat and  forEach function to convert each data value once
+
+        data.forEach(function(d){
+          d.x=parseFloat(d.x);
+          d.y=parseFloat(d.y);
+        });
+
+      // specifying the margins for around the visualizations
+
+    var margin={top:20, bottom:20,left:50,right:20};
+    //creating variable width and subtracting the margins from the set width of 700
+    var width = 300 - margin.left - margin.right;
+    //Similarly creating height of the visualization and subtracting it from top margins
+    var height= 300- margin.top - margin.bottom;
+
+    //Mapping the domain to range using the scaleLinear function
+    var xVal = d3.scaleLinear().range([0,width]);
+    var yVal = d3.scaleLinear().range([height,0]);
+
+   //Mapping dataset range on to the scale, the starting parameter 1,1 tells where the scale/axix is going to start in the visualization
+
+    xVal.domain([1,1 + d3.max(data,function(d)  {return d.x;})]);
+    yVal.domain([1,1 + d3.max(data,function(d) {return d.y})]);
+
+    //creating SVG object space in the part two div
+
+    var svg = d3.select("#scatterplotSet")
+            .append("svg")
+            .attr("height",height + margin.top + margin.bottom)
+            .attr("width", width + margin.left + margin.right)
+            .append("g")
+            .attr("transform","translate(" + margin.left + "," + margin.top + ")" );
+
+
+
+    // Incorporating the scatterplot symbols in the svg place
+
+    // Incorporating the scatterplot symbols in the svg place, apart from enter method, there is also exit method which I saw in an example (Link is in the text file)
+    // We also specify the width and height of the circle that we are going to draw from the cx and cy values
+
+    svg.selectAll("circle")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("r",10)
+          .attr("fill","blue")
+          .attr("stroke","red")
+          .attr("stroke-width",3)
+          .attr("cx", function(d){return xVal(d.x);})
+          .attr("cy",function(d){return yVal(d.y);})
+
+    //Plotting x and y axis
+        svg.append("g")
+          .attr("transform","translate(0,"+height+")")
+          .call(d3.axisBottom(xVal))
+          .attr("stroke-width",2);
+
+        svg.append("g")
+          .call(d3.axisLeft(yVal))
+          .attr("stroke-width",4);
+
+          //adding label to the diagrams by appending the text and then specifying the height and width of the labels and most importantly using .text for telling the text value
+
+          svg.append("text")
+             .attr("x",(width /2))
+             .attr("y",0 - (margin-top /2))
+             .attr("text-anchor","middle")
+             .style("font-size","20px")
+             .text("Anscombe II Here");
+
+  });
+  d3.csv("data/anscombe_IV.csv",function(data){
+
+//converting data using the parseFloat and  forEach function to convert each data value once
+
+      data.forEach(function(d){
+        d.x=parseFloat(d.x);
+        d.y=parseFloat(d.y);
+      });
+
+    // specifying the margins for around the visualizations
+
+  var margin={top:20, bottom:20,left:50,right:20};
+  //creating variable width and subtracting the margins from the set width of 700
+  var width = 300 - margin.left - margin.right;
+  //Similarly creating height of the visualization and subtracting it from top margins
+  var height= 300- margin.top - margin.bottom;
+
+  //Mapping the domain to range using the scaleLinear function
+  var xVal = d3.scaleLinear().range([0,width]);
+  var yVal = d3.scaleLinear().range([height,0]);
+
+
+  //Mapping dataset range on to the scale, the starting parameter 1,1 tells where the scale/axix is going to start in the visualization
+  xVal.domain([1,1 + d3.max(data,function(d)  {return d.x;})]);
+  yVal.domain([1,1 + d3.max(data,function(d) {return d.y})]);
+
+
+  //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+  var svg = d3.select("#scatterplotSet")
+          .append("svg")
+          .attr("height",height + margin.top + margin.bottom)
+          .attr("width", width + margin.left + margin.right)
+          .append("g")
+          .attr("transform","translate(" + margin.left + "," + margin.top + ")" );
+
+
+
+// Incorporating the scatterplot symbols in the svg place, apart from enter method, there is also exit method which I saw in an example (Link is in the text file)
+// We also specify the width and height of the circle that we are going to draw from the cx and cy values
+
+  svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("r",10)
+        .attr("fill","blue")
+        .attr("stroke","red")
+        .attr("stroke-width",3)
+        .attr("cx", function(d){return xVal(d.x);})
+        .attr("cy",function(d){return yVal(d.y);})
+
+  //Plotting x and y axis
+      svg.append("g")
+        .attr("transform","translate(0,"+height+")")
+        .call(d3.axisBottom(xVal))
+        .attr("stroke-width",2);
+
+      svg.append("g")
+        .call(d3.axisLeft(yVal))
+        .attr("stroke-width",4);
+      //adding label to the diagrams by appending the text and then specifying the height and width of the labels and most importantly using .text for telling the text value
+        svg.append("text")
+           .attr("x",(width /2))
+           .attr("y",0 - (margin-top /2))
+           .attr("text-anchor","middle")
+           .style("font-size","20px")
+           .text("Anscombe IV Here");
+
+});
+    </script>
+</body>
+
+
+</html>
