@@ -1,7 +1,9 @@
 <html>
 <head>
 <title>Project 0</title>
-<style type="text/css" href="project0.css"></style>
+
+<link rel="stylesheet" href="project1.css" type="text/css"/>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <!--Put your D3 import statement between these two lines-->
     <script src="https://d3js.org/d3.v4.js"></script>
@@ -15,8 +17,11 @@
 
     <div id="partTwo">
         <h1>Part Two: </h1>
+
         <div id="barchart">
+
             <p id="barchartLabel">   </p>
+
         </div>
 	</div>
 
@@ -32,6 +37,10 @@
         <div id="scatterplotSet">
         </div>
 	</div>
+    <div id="part six whistle">
+      <h1> Bar chart  </h1>
+      <div id="BarChartReal"> </div>
+    </div>
 
     <script type="text/javascript">
         // Put your part one code here ***********************
@@ -113,21 +122,49 @@
                 .attr("stroke-width",3)
                 .attr("cx", function(d){return xVal(d.x);})
                 .attr("cy",function(d){return yVal(d.y);})
+                .on("click",function(d,i){
+
+            // Here I am plotting the values of the x and y axis on the paragraph using the barchartLabel , which is my div id
+            // I have used ID to plot the dataset on the paragraph tags
+                d3.select("#barchartLabel #t-datapoint").remove();
+                d3.select("#barchartLabel")
+                  .append("text")
+                  .style("font-size","20px")
+                  .attr("id","t-datapoint")
+                  .text("["+d.x+","+d.y+"]");
+
+                })
 
     //mouseover event , this tells that when you are going to move your mouse over a data point then what is going to happen
-                .on("mouseover", function(c,f){
+                .on("mouseover", function(g,f){
                  d3.select(this)
                  .transition()
                  .duration(100)
                  .attr("r", 15)
-                 .style("fill", "lightblue");})
+                 .style("fill", "lightblue")
+
+//tooltip created here using the xval and yVal that are used as a data creation values and provide access
+                 svg.append("text")
+                    .attr("id","tooltip")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .attr("x",(xVal(g.x)-30 - g.x))
+                    .attr("y",(yVal(g.y)-15-(3*g.y)))
+                    .text("X:"+c.x+",Y:"+c.y)
+
+                 ;})
+
     //mouse out function defines the state of the event , when we are going to remove our mouse from a particular data point on scatterplot
                  .on("mouseout", function(c,f){
                  d3.select(this)
                   .transition()
                   .duration(100)
                   .attr("r",10)
-                 .style("fill", "blue");})
+                 .style("fill", "blue")
+
+                  d3.select("#barchart svg g #tooltip").remove();
+
+                 ;})
 
 
           //Plotting x and y axis
@@ -140,7 +177,9 @@
                 .call(d3.axisLeft(yVal))
                 .attr("stroke-width",4);
 
-        });
+
+
+});
 
         // Put your part three & four code here ***********************
         d3.csv("data/anscombe_III.csv",function(error,data){
@@ -515,6 +554,150 @@
            .text("Anscombe IV Here");
 
 });
+
+  //Part six (whistle adding a bar chart)
+
+
+d3.csv("data/anscombe_III.csv",function(error,data){
+
+        if(error) throw error;
+        //Cleaning data by converting it using the forEach and parseFloat function
+
+        data.forEach(function(d){
+          d.x = parseFloat(d.x);
+          d.y = parseFloat(d.y);
+        });
+
+      //defining the margins for the line graph
+       var margin={top:20, bottom:30, left:50, right:20};
+       //setting up the dimensions for the width and height of the visualization
+       var width= 600 - margin.left - margin.right;
+       var height= 400- margin.top- margin.bottom;
+
+       //mappign domain to the range using the scaleLinear function
+       //using scaleBand and rangeRound function, this function is specifically used for the bar chart mapping
+       var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+            y= d3.scaleLinear().rangeRound([height,0]);
+//       var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+
+
+    //usign map function to get the values in the x axis scale
+      x.domain(data.map(function(d) { return d.x; }));
+      y.domain([0,15]);
+
+   //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+        var svg = d3.select("#BarChartReal")
+                        .append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")" );
+
+
+    // using .bar to access the css file , to access the width of each band, bandwidth function is used
+    // using rect shape instead of using the cirlcs
+                   svg.selectAll(".bar")
+                   .data(data)
+                   .enter().append("rect")
+                   .attr("class", "bar")
+                   .attr("x", function(d) { return x(d.x); })
+                   .attr("y",function(d)  {return  y(d.y); })
+                    .attr("width", x.bandwidth())
+                    .attr("height", function(d) { return height - y(d.y); });
+
+              //Creating the y and x axis for the line graph
+              // properties from the css are being used using the class name
+
+              svg.append("g")
+              .attr("class", "axis axis--x")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.axisBottom(x));
+
+              //ticks are added into the scales, here I specified 10 ticks for the scale of 15.
+              svg.append("g")
+              .attr("class", "axis axis--y")
+              .call(d3.axisLeft(y).ticks(10))
+
+              svg.append("text")
+                 .attr("x",(width /2))
+                 .attr("y",0 - (margin-top /2))
+                 .attr("text-anchor","middle")
+                 .style("font-size","20px")
+                 .text("Anscombe III X-axis Here");
+              });
+
+              // using same dataset but now plotting on the y values in the bar graph
+
+              d3.csv("data/anscombe_III.csv",function(error,data){
+
+                      if(error) throw error;
+                      //Cleaning data by converting it using the forEach and parseFloat function
+
+                      data.forEach(function(d){
+                        d.x = parseFloat(d.x);
+                        d.y = parseFloat(d.y);
+                      });
+
+                    //defining the margins for the line graph
+                     var margin={top:20, bottom:30, left:50, right:20};
+                     //setting up the dimensions for the width and height of the visualization
+                     var width= 600 - margin.left - margin.right;
+                     var height= 400- margin.top- margin.bottom;
+
+                     //mappign domain to the range using the scaleLinear function
+                     //using scaleBand and rangeRound function, this function is specifically used for the bar chart mapping
+                     var y = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+                          x = d3.scaleLinear().rangeRound([height,0]);
+              //       var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+
+
+                  //usign map function to get the values in the x axis scale but for the y column
+                    y.domain(data.map(function(d) { return d.y; }));
+                    x.domain([0,16]);
+
+                 //creating SVG object space in the part two div and accessing it using the div ID. Using transform/translate feature to tell which scales we want on svg
+                      var svg = d3.select("#BarChartReal")
+                                      .append("svg")
+                                      .attr("width", width + margin.left + margin.right)
+                                      .attr("height", height + margin.top + margin.bottom)
+                                      .append("g")
+                                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")" );
+
+
+                  // using .bar to access the css file , to access the width of each band, bandwidth function is used
+                  // using rect shape instead of using the cirlcs
+                                 svg.selectAll(".bar")
+                                 .data(data)
+                                 .enter().append("rect")
+                                 .attr("class", "bar")
+                                 .attr("y", function(d) { return x(d.x); })
+                                 .attr("x",function(d)  {return  y(d.y); })
+                                  .attr("width", y.bandwidth())
+                                  .attr("height", function(d) { return height - x(d.x); });
+
+                            //Creating the y and x axis for the line graph
+                            // properties from the css are being used using the class name
+
+                            svg.append("g")
+                            .attr("class", "axis axis--x")
+                            .attr("transform", "translate(0," + height + ")")
+                            .call(d3.axisBottom(y));
+
+                            //ticks are added into the scales, here I specified 10 ticks for the scale of 15.
+                            svg.append("g")
+                            .attr("class", "axis axis--y")
+                            .call(d3.axisLeft(x).ticks(10))
+
+                            svg.append("text")
+                               .attr("x",(width /2))
+                               .attr("y",0 - (margin-top /2))
+                               .attr("text-anchor","middle")
+                               .style("font-size","20px")
+                               .text("Anscombe III Y Axis Here");
+
+                            });
+
+
     </script>
 </body>
 
